@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import type { Booking, Flight } from '../../types';
 import { Card, Button } from '../common';
 import { Plane, Calendar, CheckCircle, XCircle, Clock, Crown, Rocket } from 'lucide-react';
@@ -12,6 +13,7 @@ interface BookingCardProps {
 }
 
 export const BookingCard = ({ booking, flight, onCancel, isCancelling }: BookingCardProps) => {
+  const navigate = useNavigate();
   const getSeatClassIcon = () => {
     switch (booking.seat_class) {
       case 'business':
@@ -78,6 +80,8 @@ export const BookingCard = ({ booking, flight, onCancel, isCancelling }: Booking
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -2 }}
       transition={{ duration: 0.2 }}
+      onClick={() => navigate(`/bookings/${booking.booking_id}`)}
+      className="cursor-pointer"
     >
       <Card>
         {/* Header */}
@@ -158,7 +162,7 @@ export const BookingCard = ({ booking, flight, onCancel, isCancelling }: Booking
           <Button
             variant="danger"
             size="sm"
-            onClick={() => onCancel(booking.booking_id)}
+            onClick={(e) => { e.stopPropagation(); onCancel(booking.booking_id); }}
             isLoading={isCancelling}
             className="w-full"
           >

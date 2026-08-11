@@ -5,6 +5,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from models import User, Flight, Booking
+from services import booking
 
 
 class TestFlightsEndpoint:
@@ -365,6 +366,38 @@ class TestBookingsEndpoint:
         response = client.get("/bookings/999")
         assert response.status_code == 200
         assert response.json() == []
+
+
+    def test_get_booking_by_id_success(self, client, db_session):
+        """Test GET /bookings/by-id/{booking_id} endpoint."""
+        db_session.add(User(name="Alice Smith", email="alice@example.com"))
+        db_session.add(Flight(
+            origin="Earth",
+            destination="Mars",
+            departure_time="2099-01-01 09:00",
+            arrival_time="2099-01-01 17:00",
+            base_price=1000,
+            economy_seats_available=5,
+            business_seats_available=3,
+            galaxium_seats_available=1
+        ))
+        db_session.commit()
+        user_obj = db_session.query(User).first()
+        flight_obj = db_session.query(Flight).first()
+
+        b = booking.book_flight(db_session, user_obj.user_id, "Alice Smith", flight_obj.flight_id, "economy")
+
+        response = client.get(f"/bookings/by-id/{b.booking_id}")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["booking_id"] == b.booking_id
+        assert data["user_id"] == user_obj.user_id
+
+    def test_get_booking_by_id_not_found(self, client, db_session):
+        """Test GET /bookings/by-id/{booking_id} when booking does not exist."""
+        response = client.get("/bookings/by-id/99999")
+        assert response.status_code == 404
+        assert response.json()["detail"] == "Booking not found"
 
 
 class TestCancelEndpoint:

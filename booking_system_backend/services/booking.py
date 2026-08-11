@@ -126,3 +126,16 @@ def get_bookings(db: Session, user_id: int) -> list[BookingOut]:
     """Retrieve all bookings for a specific user."""
     bookings = db.query(Booking).filter(Booking.user_id == user_id).all()
     return [BookingOut.model_validate(b) for b in bookings]
+
+
+def get_booking(db: Session, booking_id: int) -> BookingOut | ErrorResponse:
+    """Retrieve a single booking by its booking_id."""
+    booking = db.query(Booking).filter(Booking.booking_id == booking_id).first()
+    if not booking:
+        return ErrorResponse(
+            error="Booking not found",
+            error_code="BOOKING_NOT_FOUND",
+            details=f"Booking with ID {booking_id} not found. The booking may have been deleted or the booking_id may be incorrect."
+        )
+    return BookingOut.model_validate(booking)
+

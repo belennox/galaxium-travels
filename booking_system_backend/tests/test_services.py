@@ -483,6 +483,36 @@ class TestBookingService:
         assert result == []
 
 
+    def test_get_booking_success(self, db_session):
+        """Test getting a single booking by ID."""
+        db_session.add(User(name="Alice Smith", email="alice@example.com"))
+        db_session.add(Flight(
+            origin="Earth",
+            destination="Mars",
+            departure_time="2099-01-01 09:00",
+            arrival_time="2099-01-01 17:00",
+            base_price=1000,
+            economy_seats_available=5,
+            business_seats_available=3,
+            galaxium_seats_available=1
+        ))
+        db_session.commit()
+        user_obj = db_session.query(User).first()
+        flight_obj = db_session.query(Flight).first()
+
+        b = booking.book_flight(db_session, user_obj.user_id, "Alice Smith", flight_obj.flight_id, "economy")
+        result = booking.get_booking(db_session, b.booking_id)
+        assert not isinstance(result, ErrorResponse)
+        assert result.booking_id == b.booking_id
+        assert result.user_id == user_obj.user_id
+
+    def test_get_booking_not_found(self, db_session):
+        """Test getting a non-existent booking."""
+        result = booking.get_booking(db_session, 99999)
+        assert isinstance(result, ErrorResponse)
+        assert result.error_code == "BOOKING_NOT_FOUND"
+
+
 
 class TestFlightFiltering:
     """Test flight filtering and sorting functionality."""

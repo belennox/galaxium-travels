@@ -180,3 +180,4 @@ application-*.local.properties
 .classpath
 .settings/
 .factorypath
+.github/issues/

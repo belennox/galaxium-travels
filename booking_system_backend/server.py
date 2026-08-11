@@ -61,6 +61,21 @@ def get_bookings(user_id: int) -> list[BookingOut]:
         db.close()
 
 
+
+@mcp.tool()
+def get_booking(booking_id: int) -> BookingOut:
+    """Retrieve details for a single booking by its booking_id.
+    Returns booking details or raises an error if not found."""
+    db = SessionLocal()
+    try:
+        result = booking.get_booking(db, booking_id)
+        if isinstance(result, ErrorResponse):
+            raise Exception(result.details or result.error)
+        return result
+    finally:
+        db.close()
+
+
 @mcp.tool()
 def cancel_booking(booking_id: int) -> BookingOut:
     """Cancel an existing booking by its booking_id.
@@ -250,6 +265,16 @@ def get_user_bookings(user_id: int, db: Session = Depends(get_db)):
     return booking.get_bookings(db, user_id)
 
 
+
+@app.get("/bookings/by-id/{booking_id}", response_model=BookingOut, tags=["Bookings"])
+def get_booking_endpoint(booking_id: int, db: Session = Depends(get_db)):
+    """Retrieve details for a single booking by booking_id."""
+    result = booking.get_booking(db, booking_id)
+    if isinstance(result, ErrorResponse):
+        raise HTTPException(status_code=404, detail=result.error)
+    return result
+
+
 @app.post("/cancel/{booking_id}", response_model=Union[BookingOut, ErrorResponse], tags=["Bookings"])
 def cancel_booking_endpoint(booking_id: int, db: Session = Depends(get_db)):
     """Cancel an existing booking by its booking_id.
@@ -386,9 +411,6 @@ async def release_hold(hold_id: str):
             return response.json()
         except httpx.HTTPError as e:
             return {"error": f"Failed to release hold: {str(e)}"}
-
-    """Retrieve a user's information by providing both name and email."""
-    return user.get_user(db, name, email)
 
 
 # ==================== MOUNT MCP INTO FASTAPI ====================
