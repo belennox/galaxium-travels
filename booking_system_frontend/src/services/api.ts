@@ -135,6 +135,18 @@ export const getUserBookings = async (userId: number): Promise<Booking[]> => {
 };
 
 /**
+ * Get a single booking by booking ID
+ */
+export const getBooking = async (
+  bookingId: number
+): Promise<Booking | ErrorResponse> => {
+  const response = await api.get<Booking | ErrorResponse>(
+    `/bookings/by-id/${bookingId}`
+  );
+  return response.data;
+};
+
+/**
  * Cancel a booking
  */
 export const cancelBooking = async (
